@@ -33,6 +33,10 @@
 
 ## API
 
+### GET users/check
+
+Check if server work properly
+
 ### GET users/search
 
 **Query parameters**: username, fullname, role, project, activeYn
