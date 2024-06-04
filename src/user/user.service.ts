@@ -1,6 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { UserInput, UserOptional, UserResponse, User } from './user.interface';
 
+function removeSpaces(str) {
+  return str.replace(/\s+/g, '');
+}
+function compareStringsIgnoreCase(str1, str2) {
+  return removeSpaces(str1).toLowerCase() === removeSpaces(str2).toLowerCase();
+}
 @Injectable()
 export class UserService {
   private readonly users = [
@@ -29,7 +35,6 @@ export class UserService {
 
   findUser(query): UserResponse {
     const { username, fullname, role, project, activeYn } = query;
-
     // If no query parameters are provided, return the full list of users
     if (!username && !fullname && !role && !project && !activeYn) {
       return {
@@ -41,7 +46,7 @@ export class UserService {
 
     // If query parameters username are provided
     if (username) {
-      const user = this.users.find((u) => u.username === username);
+      const user = this.users.find((u) => u.username === username.trim());
 
       if (!user) {
         return {
@@ -60,32 +65,42 @@ export class UserService {
     const info: UserInput = {};
 
     if (fullname) {
-      info.fullname = fullname;
+      info.fullname = fullname.trim();
     }
 
     if (role) {
-      info.role = role;
+      info.role = role.trim();
     }
 
     if (project) {
-      info.project = project;
+      info.project = project.trim();
     }
 
     if (activeYn) {
-      info.activeYn = activeYn;
+      info.activeYn = activeYn.trim();
     }
 
     const filteredUsers = this.users.filter((u) => {
       for (const key in info) {
         // project
         if (key === 'project') {
-          if (!u.project.includes(info.project)) {
-            return false;
+          // if (!u.project.includes(info.project)) {
+          //   return false;
+          // }
+
+          // compare each project in the user's project array
+          // with the project in the query
+          let found = false;
+          for (const proj of u.project) {
+            if (compareStringsIgnoreCase(proj, info.project)) {
+              found = true;
+              break;
+            }
+            return found;
           }
           continue;
-        }
-        if (u[key] !== info[key]) {
-          return false;
+        } else {
+          return compareStringsIgnoreCase(u[key], info[key]);
         }
       }
       return true;
@@ -181,11 +196,11 @@ export class UserService {
     }
 
     const newUser = {
-      username,
-      fullname,
-      role,
+      username: username.trim(),
+      fullname: fullname.trim(),
+      role: role.trim(),
       project,
-      activeYn,
+      activeYn: activeYn.trim(),
     };
 
     this.users.push(newUser);
